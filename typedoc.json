@@ -1,0 +1,11 @@
+{
+  "name": "nrelay",
+  "readme": "./api-docs/readme.md",
+  "mode": "file",
+  "gitRevision": "dev",
+  "exclude": [
+    "**/*+(index).ts"
+  ],
+  "excludeExternals": true,
+  "out": "./api-docs/public"
+}

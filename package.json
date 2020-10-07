@@ -1,0 +1,42 @@
+{
+  "name": "nrelay",
+  "version": "8.9.0",
+  "description": "A console based modular client for Realm of the Mad God built with Node.js and TypeScript.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "compile": "tsc -p .",
+    "index": "tsai --path src --exclude stdlib --overwrite",
+    "docs": "typedoc --options ./typedoc.json",
+    "lint": "tslint -p ."
+  },
+  "files": [
+    "lib/",
+    "license.md"
+  ],
+  "author": "thomas-crane",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomas-crane/nrelay"
+  },
+  "devDependencies": {
+    "@types/node": "^8.10.60",
+    "@types/node-rsa": "^0.4.0",
+    "tsai": "^2.0.0",
+    "tslint": "^5.20.1",
+    "typedoc": "^0.15.8",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "@realmlib/net": "^3.3.3",
+    "@realmlib/resx": "^5.0.0",
+    "chalk": "^2.3.0",
+    "fast-xml-parser": "^3.17.4",
+    "he": "^1.2.0",
+    "node-rsa": "^0.4.2",
+    "reflect-metadata": "^0.1.12",
+    "socks": "^2.3.3",
+    "xml2json": "^0.12.0"
+  }
+}

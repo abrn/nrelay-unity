@@ -1,0 +1,23 @@
+# WebStorm workspace configuration
+.idea/
+
+# Node modules
+node_modules/
+
+# Build result
+lib/
+*.tsbuildinfo
+
+# Auto generated docs
+api-docs/public
+api-docs/firebase-debug.log
+api-docs/.firebase/
+
+# User prefs
+.vscode/
+
+# Mac files
+.DS_Store
+
+# npm pack files
+*.tgz
