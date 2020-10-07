@@ -215,6 +215,38 @@ export interface PlayerData {
    * The multiplier for projectile lifetime for shots from this player.
    */
   projLifeMult: number;
+  /**
+   * The players exalted HP stat
+   */
+  exaltedHP: number;
+  /**
+   * The players exalted MP stat
+   */
+  exaltedMP: number;
+  /**
+   * The players exalted Attack stat
+   */
+  exaltedAtt: number;
+  /**
+   * The players exalted Defense stat
+   */
+  exaltedDef: number;
+  /**
+   * The players exalted Speed stat
+   */
+  exaltedSpd: number;
+  /**
+   * The players exalted Dexterity stat
+   */
+  exaltedDex: number;
+  /**
+   * The players exalted Vitality stat
+   */
+  exaltedVit: number;
+  /**
+   * The players exalted Wisdom stat
+   */
+  exaltedWis: number;
 }
 
 /**
@@ -272,6 +304,14 @@ export function getDefaultPlayerData(): PlayerData {
     texture: 0,
     fortuneTokens: 0,
     projSpeedMult: 0,
-    projLifeMult: 0
+    projLifeMult: 0,
+    exaltedHP: 0,
+    exaltedMP: 0,
+    exaltedAtt: 0,
+    exaltedDef: 0,
+    exaltedSpd: 0,
+    exaltedDex: 0,
+    exaltedVit: 0,
+    exaltedWis: 0
   };
 }
