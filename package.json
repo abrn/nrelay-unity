@@ -1,6 +1,6 @@
 {
   "name": "nrelay-unity",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A console based modular client for RotMG Unity built with Node.js and TypeScript",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

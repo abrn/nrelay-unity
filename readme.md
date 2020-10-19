@@ -1,11 +1,14 @@
-# nrelay
+# nrelay-unity
 
 A console based modular client for Realm of the Mad God built with Node.js and TypeScript.
 
-Upgrading to v8? [Check out the migration guide.](docs/migration/7-to-8.md)
+This software was originally written by [Thomas Crane](https://github.com/thomas-crane) and you can find the original version for flash [here](https://github.com/thomas-crane/nrelay)  
+
+All credit goes to Thomas for writing this and the only commits I am making are to allow the project keep working with the RotMG Unity client.  
 
 ## Contents
 
++ [Unity Changes](#unity-changes)
 + [Docs](#docs)
 + [Install](#install)
   + [Prerequisites](#prerequisites)
@@ -17,6 +20,18 @@ Upgrading to v8? [Check out the migration guide.](docs/migration/7-to-8.md)
 + [Build](#build)
 + [Acknowledgements](#acknowledgements)
 
+## Unity Changes
+
+The following changes have been made to nrelay to port it over to Unity: 
+
++ The auto-updater has been completely removed as there is now no way to download the current Unity client and parse the assets 
++ Because of the above, the `--no-update`, `--force-update` and `--update-from` arguments have been removed
++ The incoming and outgoing RC4 cipher keys have changed in the [realmlib library](https://github.com/abrn/realmlib-exalt)
++ All HTTP requests made to the appspot now use the same headers as the Unity client, mainly the `User-Agent` and the `X-Unity-Version` to avoid clients being banned
++ DECA's CompressedInt type has been added to the [realmlib library](https://github.com/abrn/realmlib-exalt) and some packet structures have been updated accordingly
++ Added the `QUEUE_INFO` packet due to servers now possibly having a player queue - the client will now wait a reasonable time before trying to reconnect
++ Various other packets have been added and updated
+
 ## Docs
 
 The documentation in this repository consists mostly of guides and tutorials about how to use nrelay and its components, and how to create plugins. All of the docs can be found [in the docs folder.](/docs/readme.md)
@@ -27,25 +42,31 @@ There is also extensive inline API documentation, which can be viewed [on the do
 
 ### Prerequisites
 
-Make sure you have [Nodejs](https://nodejs.org/en/) installed before running nrelay.
+Make sure you have [Nodejs v12+](https://nodejs.org/en/download/) installed before running nrelay.
 
-1. Install the nrelay cli.
+1. Install the nrelay cli:
 
 ```bash
 npm install -g nrelay-cli
 ```
 
-2. Create a new nrelay project.
+2. Create a new nrelay project:
 
 ```bash
 nrelay new my-new-project
 ```
 
+3. Navigate to the project folder:
+
+```bash
+cd my-new-project
+```
+
 ## Setup
 
-When you create a new nrelay project, you will need to set up your `accounts.json` file. It has been generated for you, but currently only contains an example account.
+When you create a new nrelay project, you will need to set up your `accounts.json` file. It will be generated for you, but only contains an example account.
 
-The current contents of the file will resemble the following.
+The contents of the file will resemble the following.
 
 ```json
 [
@@ -113,7 +134,7 @@ nrelay has a built in Local Server which can be used to transfer data between nr
 After setting up the `accounts.json` file, nrelay is ready to go. To run nrelay, use the command `nrelay run` in the console. If you have setup your `accounts.json` properly (and used the correct credentials) you should see an output similar to this
 
 ```bash
-C:\Documents> nrelay
+C:\Documents> nrelay run
 [17:25:23 | NRelay]           Starting...
 ...
 [17:25:26 | Main Client]      Authorized account
@@ -131,58 +152,64 @@ The `alias` property in the account config is optional. If one is not specified,
 [17:25:26 | f***@e***.com]    Connected to server!
 ```
 
-## Command line arguments
+## Commands
 
-There are several command line arguments which can be provided when starting nrelay to change the behaviour.
+Using the `nrelay` command in the CLI there are several arguments you can pass:
 
-### `--version` or `-v`
+#### `nrelay run`  
+Run the current nrelay project
+
+#### `nrelay new <projectname>`  
+Create a new nrelay project folder  
+
+#### `nrelay build`  
+Compile the TypeScript inside the `/src` folder into JavaScript  
+
+#### `nrelay eject`  
+Create an `index.js` file which can be ran the usual way with Node - not using the nrelay CLI  
+
+#### `nrelay fix`  
+Check the current folder is a valid nrelay project and fix any issues
+
+#### `nrelay update`  
+Update the nrelay-cli to the newest version  
+
+
+## Extra arguments
+
+There are other extra command line arguments which can be provided when starting nrelay to change the behaviour:
+
+#### `--version` or `-v`
 
 This will print the nrelay version number to the console and exit.
 
-### `--debug`
+#### `--debug`
 
 This will start nrelay in debug mode. Debug mode provides a higher detail of logging. It is not recommended to use debug mode unless you are experiencing errors and need more info.
 
-### `--no-update`
-
-This will stop nrelay from checking for updates when it starts.
-
-### `--no-log`
+#### `--no-log`
 
 This will stop nrelay from writing to the log file.
 
-### `--no-plugins`
+#### `--no-plugins`
 
 This will stop nrelay from loading any plugins.
 
-### `--force-update`
-
-This will force nrelay to download the latest client and assets.
-
-### `--update-from="filepath"`
-
-This will update the packet ids using the client at the given filepath.
-
-If `filepath` is a path to a file (e.g. `C:\clients\myclient.swf`), then the directory containing the swf will be used to store the decompiled scripts.
-If `filepath` is a path to a directory, (e.g. `C:\clients`), then nrelay will assume a file called `client.swf` exists in the directory, and will use the directory to store the decompiled scripts.
-
-Please note that `filepath` should always be an absolute path to either a client or a directory containing a `client.swf`.
-
 ### Examples
 
-To start nrelay without checking for updates or log file writing, use
+To start nrelay without checking for updates or log file writing:
 
 ```bash
 nrelay run --no-update --no-log
 ```
 
-To start nrelay and force an update, use
+To start nrelay in verbose mode and not load any plugins:  
 
 ```bash
-nrelay run --force-update
+nrelay run --debug --no-plugins
 ```
 
-To print the version number, use
+To print the version number:
 
 ```bash
 nrelay -v
@@ -196,10 +223,23 @@ To recompile the plugins simply use
 
 ```bash
 nrelay build
+``` 
+
+If this doesn't work, you will need to install the TypeScript compiler:
+
+```bash
+npm install -g typescript
+```  
+
+Then to compile everything in the plugin folder:
+
+```bash
+tsc
 ```
 
 ## Acknowledgements
 
 This project uses the following open source software:
 
-+ [JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler)
++ [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - to decompile the Unity client and parse the assets
++ [ghidra](https://github.com/NationalSecurityAgency/ghidra) - to reverse engineer edits to the network structure of the game
