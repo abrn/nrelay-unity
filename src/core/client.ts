@@ -286,7 +286,11 @@ export class Client {
     for (let i = 0; i < numProjectiles; i++) {
       const shootPacket = new PlayerShootPacket();
       shootPacket.bulletId = this.getBulletId();
-      shootPacket.angle = angle;
+      if (hasEffect(this.playerData.condition, ConditionEffect.UNSTABLE)) {
+        shootPacket.angle = Math.random() * 6.28318530717959;
+      } else {
+        shootPacket.angle = angle;
+      }
       shootPacket.containerType = item.type;
       shootPacket.time = time;
       shootPacket.startingPos = this.worldPos.clone();
