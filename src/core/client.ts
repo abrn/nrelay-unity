@@ -1288,6 +1288,11 @@ export class Client {
         return;
       }
     }
+    if (hasEffect(this.playerData.condition, ConditionEffect.PETRIFIED)) {
+      if (!hasEffect(this.playerData.condition, ConditionEffect.PETRIFIED_IMMUNE)) {
+        return;
+      }
+    }
     const xTile = this.mapTiles[Math.floor(this.worldPos.y) * this.mapInfo.width + Math.floor(x)];
     if (xTile && !xTile.occupied) {
       this.worldPos.x = x;
