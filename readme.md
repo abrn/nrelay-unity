@@ -73,7 +73,7 @@ The contents of the file will resemble the following.
   {
     "alias": "Main Client",
     "guid": "example@email.com",
-    "password": "password10",
+    "password": "password1",
     "serverPref": "Australia"
   }
 ]
