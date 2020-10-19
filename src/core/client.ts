@@ -386,7 +386,7 @@ export class Client {
    * @param gameId An optional game id to use when connecting. Defaults to the current game id.
    */
   connectToServer(server: Server, gameId = this.internalGameId): void {
-    Logger.log(this.alias, `Switching to ${server.name}.`, LogLevel.Info);
+    Logger.log(this.alias, `Switching server to ${server.name}..`, LogLevel.Info);
     this.internalServer = Object.assign({}, server);
     this.nexusServer = Object.assign({}, server);
     this.internalGameId = gameId;
@@ -397,7 +397,7 @@ export class Client {
    * Connects to the Nexus.
    */
   connectToNexus(): void {
-    Logger.log(this.alias, 'Connecting to the Nexus.', LogLevel.Info);
+    Logger.log(this.alias, 'Connecting to the Nexus..', LogLevel.Info);
     this.internalGameId = GameId.Nexus;
     this.internalServer = Object.assign({}, this.nexusServer);
     this.connect();
@@ -408,7 +408,7 @@ export class Client {
    *  @param gameId The gameId to use upon connecting.
    */
   changeGameId(gameId: GameId): void {
-    Logger.log(this.alias, `Changing gameId to ${gameId}`, LogLevel.Info);
+    Logger.log(this.alias, `Changing gameId to ${gameId}..`, LogLevel.Info);
     this.internalGameId = gameId;
     this.connect();
   }
@@ -427,7 +427,7 @@ export class Client {
    */
   findPath(to: Point): void {
     if (!this.pathfinderEnabled) {
-      Logger.log(this.alias, 'Pathfinding is not enabled. Please enable it in the acc-config.', LogLevel.Warning);
+      Logger.log(this.alias, 'Pathfinding is not enabled on this account - please enable it in the accounts.json', LogLevel.Warning);
       return;
     }
     to.x = Math.floor(to.x);
@@ -466,7 +466,7 @@ export class Client {
       return false;
     }
 
-    // work out the defense.
+    // work out the defense
     let def = this.playerData.def;
     if (hasEffect(this.playerData.condition, ConditionEffect.ARMORED)) {
       def *= 2;
@@ -494,10 +494,11 @@ export class Client {
         continue;
       }
       if (this.projectiles[i].damagePlayers) {
-        // check if it hit a wall.
+        // check if it hit a wall
         const x = Math.floor(this.projectiles[i].currentPosition.x);
         const y = Math.floor(this.projectiles[i].currentPosition.y);
 
+        // TODO: OPTIMIZE THIS
         const tileOccupied =
           this.mapTiles[y * this.mapInfo.width + x]
           && this.mapTiles[y * this.mapInfo.width + x].occupied;
@@ -509,7 +510,7 @@ export class Client {
           otherHit.time = this.getTime();
           this.send(otherHit);
           this.projectiles.splice(i, 1);
-          Logger.log(this.alias, 'Sent OtherHit for object.', LogLevel.Debug);
+          Logger.log(this.alias, `Sent OtherHit for objectId ${otherHit.objectId}`, LogLevel.Debug);
           continue;
         }
 
@@ -526,13 +527,13 @@ export class Client {
               this.projectiles[i].projectileProperties.armorPiercing,
               time,
             );
-            // only reply if we didn't get nexused.
+            // only reply if we didn't get nexused
             if (!nexused) {
               const playerHit = new PlayerHitPacket();
               playerHit.bulletId = this.projectiles[i].bulletId;
               playerHit.objectId = this.projectiles[i].ownerObjectId;
               this.send(playerHit);
-              Logger.log(this.alias, 'Sent PlayerHit.', LogLevel.Debug);
+              Logger.log(this.alias, `Sent PlayerHit to objectId ${playerHit.objectId}`, LogLevel.Debug);
             }
             if (this.projectiles[i].projectileProperties.multiHit) {
               this.projectiles[i].multiHit.add(this.objectId);
@@ -545,7 +546,7 @@ export class Client {
 
         // check if it hit another player.
         if (this.players.size > 0) {
-          // find the closest player.
+          // find the closest player
           let closestPlayer: [number, Entity] = [Infinity, undefined];
           for (const player of this.players.values()) {
             const alreadyHit =
@@ -906,7 +907,7 @@ export class Client {
   private onFailurePacket(failurePacket: FailurePacket): void {
     switch (failurePacket.errorId) {
       case FailureCode.IncorrectVersion:
-        Logger.log(this.alias, 'Your Exalt build version is out of date - change versions.json or wait for an update');
+        Logger.log(this.alias, 'Your Exalt build version is out of date - change the buildVersion in versions.json', LogLevel.Error);
         this.buildVersion = failurePacket.errorDescription;
         this.runtime.updateBuildVersion(failurePacket.errorDescription);
         break;
