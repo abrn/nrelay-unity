@@ -1283,8 +1283,10 @@ export class Client {
 
   private walkTo(x: number, y: number): void {
     // tslint:disable-next-line: no-bitwise
-    if (hasEffect(this.playerData.condition, ConditionEffect.PARALYZED | ConditionEffect.PAUSED)) {
-      return;
+    if (hasEffect(this.playerData.condition, ConditionEffect.PARALYZED || ConditionEffect.PAUSED)) {
+      if (!hasEffect(this.playerData.condition, ConditionEffect.PARALYZED_IMMUNE)) {
+        return;
+      }
     }
     const xTile = this.mapTiles[Math.floor(this.worldPos.y) * this.mapInfo.width + Math.floor(x)];
     if (xTile && !xTile.occupied) {
@@ -1308,7 +1310,8 @@ export class Client {
   }
 
   private getSpeed(timeElapsed: number): number {
-    if (hasEffect(this.playerData.condition, ConditionEffect.SLOWED)) {
+    if (hasEffect(this.playerData.condition, ConditionEffect.SLOWED) && 
+          !hasEffect(this.playerData.condition, ConditionEffect.SLOWED_IMMUNE)) {
       return MIN_MOVE_SPEED * this.tileMultiplier;
     }
 
@@ -1323,7 +1326,8 @@ export class Client {
   }
 
   private getAttackFrequency(): number {
-    if (hasEffect(this.playerData.condition, ConditionEffect.DAZED)) {
+    if (hasEffect(this.playerData.condition, ConditionEffect.DAZED) &&
+          !hasEffect(this.playerData.condition, ConditionEffect.DAZED_IMMUNE)) {
       return MIN_ATTACK_FREQ;
     }
     let atkFreq = MIN_ATTACK_FREQ + this.playerData.dex / 75 * (MAX_ATTACK_FREQ - MIN_ATTACK_FREQ);
