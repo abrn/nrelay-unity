@@ -73,6 +73,10 @@ export interface GameObject {
     amount: number;
   }>;
   /**
+   * The activation of the item
+   */
+  activate: ActivateInfo[];
+  /**
    * The rate of fire of this object, if it is an item.
    */
   rateOfFire: number;
@@ -104,6 +108,152 @@ export interface GameObject {
    * Whether or not the object protects players from ground damage.
    */
   protectFromGroundDamage: boolean;
+  /**
+   * The MP cost of the using the object
+   */
+  mpCost: number;
+  /**
+   * The MP cost when you stop using the item
+   */
+  mpEndCost: number;
+  /**
+   * Whether the item is soulbound
+   */
+  soulbound: boolean;
+  /**
+   * Whether the item is usable
+   */
+  usable: boolean;
+}
+
+/**
+ * The activation properties of an object
+ */
+export interface ActivateInfo {
+  /**
+   * The ID of the object for indexing.
+   */
+  id: number;
+  /**
+   * The type of activation.
+   */
+  type: string;
+  /**
+   * The duration of activation.
+   */
+  duration?: number;
+  /**
+   * The stat amount.
+   */
+  stat?: number;
+  /**
+   * The effect name.
+   */
+  effect?: string;
+  /**
+   * The cooldown amount between activations in seconds.
+   */
+  cooldown?: number;
+  /**
+   * The target of the activation.
+   */
+  target?: string;
+  /**
+   * The activation position i.e "center"
+   */
+  center?: string;
+  /**
+   * The number of shots.
+   */
+  numShots?: number;
+  /**
+   * The speed of the activation.
+   */
+  speed?: number;
+  /**
+   * The range of the shot/AOE.
+   */
+  range?: number;
+  /**
+   * The tile radius of the AOE.
+   */
+  radius?: number;
+  /**
+   * The total damage over the activation.
+   */
+  totalDamage?: number;
+  /**
+   * The impact damage of an AOE.
+   */
+  impactDamage?: number;
+  /**
+   * The time in seconds taken to throw the projectile.
+   */
+  throwTime?: number;
+  /**
+   * The amount to heal on activation.
+   */
+  heal?: number;
+  /**
+   * The healing range of the activation.
+   */
+  healRange?: number;
+  /**
+   * The amount of defense the activation ignores.
+   */
+  ignoreDef?: number;
+  /**
+   * The minimum amount of wis required to activate.
+   */
+  wisMin?: number;
+  /**
+   * If the activation is affected by wismod.
+   */
+  useWisMod?: boolean;
+  /**
+   * The base amount of damage with wismod.
+   */
+  wisDamageBase?: number;
+  /**
+   * The condition to add on activation.
+   */
+  condEffect?: string;
+  /**
+   * The duration of the condition afflicted.
+   */
+  condDuration?: number;
+  /**
+   * If the activation stacks with other activations.
+   */
+  noStack?: boolean;
+  /**
+   * The type of unlocker i.e "char" or "vault".
+   */
+  slot?: string;
+  /**
+   * The hex ID of the skin if the activate is a skin changer.
+   */
+  skin?: string;
+  /**
+   * The ID of the skin if the activate is a skin unlocker.
+   */
+  skinType?: number;
+  /**
+   * If the key activation requires the client standing on a portal.
+   */
+  isUnlock?: boolean;
+  /**
+   * The new ID of a ChangeObject activation.
+   */
+  newId?: number;
+  /**
+   * The only area where activation is allowed i.e "realm" or "vault".
+   */
+  onlyIn?: string;
+  /**
+   * The only area where activation is allowed i.e "Guild Hall" or "Wine Cellar".
+   */
+  onlyInArea?: string;
 }
 
 /**

@@ -173,6 +173,30 @@ export function processStatData(stats: StatData[], currentData?: PlayerData): Pl
       case StatType.PROJECTILE_LIFE_MULT:
         playerData.projLifeMult = stat.statValue / 1000;
         continue;
+      case StatType.EXALTED_HP:
+        playerData.exaltedHP = stat.statValue;
+        continue;
+      case StatType.EXALTED_MP:
+        playerData.exaltedMP = stat.statValue;
+        continue;
+      case StatType.EXALTED_ATT:
+        playerData.exaltedAtt = stat.statValue;
+        continue;
+      case StatType.EXALTED_DEF:
+        playerData.exaltedDef = stat.statValue;
+        continue;
+      case StatType.EXALTED_SPEED:
+        playerData.exaltedSpd = stat.statValue;
+        continue;
+      case StatType.EXALTED_DEX:
+        playerData.exaltedDex = stat.statValue;
+        continue;
+      case StatType.EXALTED_VIT:
+        playerData.exaltedVit = stat.statValue;
+        continue;
+      case StatType.EXALTED_WIS:
+        playerData.exaltedWis = stat.statValue;
+        continue; 
       default:
         if (stat.statType >= StatType.INVENTORY_0_STAT && stat.statType <= StatType.INVENTORY_11_STAT) {
           playerData.inventory[stat.statType - 8] = stat.statValue;
