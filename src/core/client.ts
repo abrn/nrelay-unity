@@ -16,7 +16,7 @@ import { createConnection } from '../util/net-util';
 import * as parsers from '../util/parsers';
 import { getHooks, PacketHook } from './../decorators';
 // tslint:disable-next-line: max-line-length
-import { Account, CharacterInfo, Classes, ConditionEffect, Enemy, getDefaultPlayerData, hasEffect, MapInfo, MoveRecords, PlayerData, Projectile, Proxy, Server } from './../models';
+import { Account, CharacterInfo, Classes, ConditionEffect, Enemy, GameObject, getDefaultPlayerData, hasEffect, MapInfo, MoveRecords, PlayerData, Projectile, Proxy, Server } from './../models';
 
 const MIN_MOVE_SPEED = 0.004;
 const MAX_MOVE_SPEED = 0.0096;
@@ -86,31 +86,46 @@ export class Client {
   readonly charInfo: CharacterInfo;
   /**
    * The server the client is connected to.
-   * @see `Server` for more info.
    */
   get server(): Server {
     return this.internalServer;
   }
   /**
-   * The alias of the client.
+   * The alias of the client
    */
   alias: string;
   /**
-   * The email address of the client.
+   * The email address of the client
    */
   readonly guid: string;
   /**
-   * The password of the client.
+   * The password of the client
    */
   readonly password: string;
   /**
-   * The runtime in which this client is running.
+   * The runtime in which this client is running
    */
   readonly runtime: Runtime;
   /**
-   * Whether or not the client should automatically shoot at enemies.
+   * Whether or not the client should automatically shoot at enemies
    */
   autoAim: boolean;
+  /**
+   * Whether or not the client should automatically use the ability
+   */
+  autoAbility: boolean;
+  /**
+   * The time in ms between the last ability use
+   */
+  lastAutoAbility: number;
+  /**
+   * Whether or not the reconnect packet should be blocked
+   */
+  blockReconnect: boolean;
+  /**
+   * Whether to block the next UPDATE ACK
+   */
+  blockNextUpdateAck: boolean;
   /**
    * A number between 0 and 1 which can be used to modify the speed
    * of the client. A value of 1 will be 100% move speed for the client,
@@ -204,35 +219,44 @@ export class Client {
    */
   constructor(runtime: Runtime, server: Server, accInfo: Account) {
     this.runtime = runtime;
+    this.alias = accInfo.alias;
+    this.guid = accInfo.guid;
+    this.password = accInfo.password;
+    this.playerData = getDefaultPlayerData();
+    this.playerData.server = server.name;
+    this.proxy = accInfo.proxy;
+    this.pathfinderEnabled = accInfo.pathfinder || false;
+    
     this.projectiles = [];
     this.enemies = new Map();
     this.players = new Map();
+    this.nextPos = [];
+
     this.autoAim = true;
-    this.key = [];
-    this.keyTime = -1;
+    this.autoAbility = true;
+    this.lastAutoAbility = 0;
+    this.blockReconnect = false;
+    this.blockNextUpdateAck = false;
+    // TODO: add reconnect blocking option
+  
+    this.connectTime = Date.now();
+    this.socketConnected = false;
     this.connectionGuid = '';
     this.internalGameId = GameId.Nexus;
-    this.playerData = getDefaultPlayerData();
-    this.playerData.server = server.name;
-    this.nextPos = [];
-    this.internalMoveMultiplier = 1;
+    this.internalMoveMultiplier = 0.9;
     this.tileMultiplier = 1;
-    this.internalAutoNexusThreshold = 0.3;
+    this.internalAutoNexusThreshold = 0.2;
     this.currentBulletId = 1;
     this.lastAttackTime = 0;
+    this.key = [];
+    this.keyTime = -1;
     this.hasPet = false;
     this.safeMap = true;
     this.hpLog = 0;
     this.clientHP = 0;
-    this.connectTime = Date.now();
-    this.socketConnected = false;
-    this.guid = accInfo.guid;
-    this.password = accInfo.password;
+    
     this.buildVersion = this.runtime.buildVersion;
-    this.alias = accInfo.alias;
-    this.proxy = accInfo.proxy;
-    this.reconnectCooldown = getWaitTime(this.proxy ? this.proxy.host : '');
-    this.pathfinderEnabled = accInfo.pathfinder || false;
+
     if (accInfo.charInfo) {
       this.charInfo = accInfo.charInfo;
     } else {
@@ -241,6 +265,7 @@ export class Client {
     this.needsNewCharacter = this.charInfo.charId < 1;
     this.internalServer = Object.assign({}, server);
     this.nexusServer = Object.assign({}, server);
+    this.reconnectCooldown = getWaitTime(this.proxy ? this.proxy.host : '');
 
     this.io = new PacketIO({ packetMap: this.runtime.packetMap });
 
@@ -327,6 +352,60 @@ export class Client {
     }
 
     return true;
+  }
+
+  /**
+   * Use the ability on the players class (auto buff or damage nearest enemy)
+   */
+  useAbility(angle1: number, time: number): void {
+    if (this.autoAbility) {
+      
+      let ability = this.runtime.resources.items[this.playerData.inventory[1]];
+      // no ability equipped
+      if (!ability) return;
+
+      const attackPeriod = 1 / this.getAttackFrequency() * (1 / ability.rateOfFire);
+      const numProjectiles = ability.numProjectiles > 0 ? ability.numProjectiles : 1;
+    }
+  }
+
+  /**
+   * Returns true or false if the client can currently use their ability
+   * 
+   * @param time the current game time
+   * @param ability the ability GameObject
+   */
+  canUseAbility(time: number = -1, ability: GameObject): boolean
+  {
+    if (this.playerData.inventory[1] == -1) return false;
+    if (!ability.usable) return false;
+
+    // check if the map has been loaded
+    if (!this.mapInfo) return false;
+    if (time = -1) {
+      time = this.getTime();
+    }
+
+    // check for silenced or quiet
+    if (hasEffect(this.playerData.condition, ConditionEffect.SILENCED) || hasEffect(this.playerData.condition, ConditionEffect.QUIET)) {
+      return false;
+    }
+    // check stun
+    if (ability.activate[0].type == "Shoot" && hasEffect(this.playerData.condition, ConditionEffect.STUNNED)) {
+      return false;
+    }
+    // check MP cost
+    if (ability.mpCost < this.playerData.mp) {
+      return false;
+    }
+    // check equipment cooldown
+    if (ability.activate[0].cooldown) {
+      if (((Date.now() / 1000) - (this.lastAutoAbility / 1000)) < ability.activate[0].cooldown) return false;
+    }
+  }
+
+  startAutoAbility(): void {
+    
   }
 
   /**
@@ -723,12 +802,12 @@ export class Client {
 
   @PacketHook()
   private onDeath(deathPacket: DeathPacket): void {
-    // if it isn't us that died, nothing to do.
+    // check if it was our client that died
     if (deathPacket.accountId !== this.playerData.accountId) {
       return;
     }
 
-    Logger.log(this.alias, `The character ${deathPacket.charId} has died.`, LogLevel.Warning);
+    Logger.log(this.alias, `The character ${deathPacket.charId} has died`, LogLevel.Warning);
 
     // update the char info.
     this.charInfo.charId = this.charInfo.nextCharId;
@@ -738,7 +817,7 @@ export class Client {
     // update the char info cache.
     this.runtime.accountService.updateCharInfoCache(this.guid, this.charInfo);
 
-    Logger.log(this.alias, 'Connecting to the nexus.', LogLevel.Info);
+    Logger.log(this.alias, 'Connecting to the nexus..', LogLevel.Info);
     // reconnect to the nexus.
     this.connectToNexus();
   }
@@ -761,10 +840,13 @@ export class Client {
 
   @PacketHook()
   private onUpdate(updatePacket: UpdatePacket): void {
-    // reply
-    const updateAck = new UpdateAckPacket();
-    this.send(updateAck);
-
+    if (!this.blockNextUpdateAck) {
+      const updateAck = new UpdateAckPacket();
+      this.send(updateAck);
+    } else {
+      this.blockNextUpdateAck = false;
+    }
+    
     const pathfinderUpdates: NodeUpdate[] = [];
     // playerdata
     for (const obj of updatePacket.newObjects) {
@@ -782,7 +864,7 @@ export class Client {
       }
       if (obj.status.objectId === this.objectId + 1) {
         if (this.runtime.resources.pets[obj.objectType] !== undefined) {
-          Logger.log(this.alias, 'Detected pet.', LogLevel.Debug);
+          Logger.log(this.alias, 'Detected pet', LogLevel.Debug);
           this.hasPet = true;
         }
       }
@@ -857,7 +939,6 @@ export class Client {
       }
     }
 
-    // drops
     for (const drop of updatePacket.drops) {
       if (this.enemies.has(drop)) {
         this.enemies.delete(drop);
@@ -877,11 +958,14 @@ export class Client {
 
   @PacketHook()
   private onReconnectPacket(reconnectPacket: ReconnectPacket): void {
-    // if there is a new host, then switch to it.
+    // check for reconnect blocking
+    if (this.blockReconnect) return;
+    
+    // if there is a new host, then switch to it
     if (reconnectPacket.host !== '') {
       this.internalServer.address = reconnectPacket.host;
     }
-    // same story with the name.
+    // same story with the name
     if (reconnectPacket.name !== '') {
       this.internalServer.name = reconnectPacket.name;
     }
@@ -979,6 +1063,7 @@ export class Client {
     this.lastTickTime = this.currentTickTime;
     this.lastTickId = newTickPacket.tickId;
     this.currentTickTime = this.getTime();
+    
     // reply
     const movePacket = new MovePacket();
     movePacket.tickId = newTickPacket.tickId;
@@ -986,6 +1071,7 @@ export class Client {
     movePacket.serverRealTimeMS = newTickPacket.serverRealTimeMS;
     movePacket.newPosition = this.worldPos;
     movePacket.records = [];
+
     const lastClear = this.moveRecords.lastClearTime;
     if (lastClear >= 0 && movePacket.time - lastClear > 125) {
       const len = Math.min(10, this.moveRecords.records.length);
@@ -1029,7 +1115,10 @@ export class Client {
 
     if (this.autoAim && this.playerData.inventory[0] !== -1 && this.enemies.size > 0) {
       const projectile = this.runtime.resources.items[this.playerData.inventory[0]].projectile;
+      const abilityProjectile = this.runtime.resources.items[this.playerData.inventory[1]].projectile;
+
       const distance = projectile.lifetimeMS * (projectile.speed / 10000);
+      const abilityDistance = projectile.lifetimeMS * (projectile.speed / 10000);
       for (const enemy of this.enemies.values()) {
         if (enemy.squareDistanceTo(this.worldPos) < distance ** 2) {
           const x = enemy.objectData.worldPos.x - this.worldPos.x;
@@ -1144,6 +1233,7 @@ export class Client {
     this.runtime.emit(Events.ClientConnect, this);
     this.lastTickTime = 0;
     this.lastAttackTime = 0;
+    this.lastAutoAbility = 0;
     this.currentTickTime = 0;
     this.lastTickId = -1;
     this.currentBulletId = 1;
@@ -1160,9 +1250,7 @@ export class Client {
     hp.buildVersion = this.buildVersion;
     hp.gameId = this.internalGameId;
     hp.guid = rsa.encrypt(this.guid);
-    hp.random1 = Math.floor(Math.random() * 1000000000);
     hp.password = rsa.encrypt(this.password);
-    hp.random2 = Math.floor(Math.random() * 1000000000);
     hp.keyTime = this.keyTime;
     hp.key = this.key;
     hp.gameNet = 'rotmg';
@@ -1179,7 +1267,7 @@ export class Client {
   }
 
   private onClose(): void {
-    Logger.log(this.alias, `The connection to ${this.nexusServer.name} was closed.`, LogLevel.Warning);
+    Logger.log(this.alias, `The connection to ${this.nexusServer.name} was closed`, LogLevel.Warning);
     this.socketConnected = false;
     this.runtime.emit(Events.ClientDisconnect, this);
     this.nextPos.length = 0;
