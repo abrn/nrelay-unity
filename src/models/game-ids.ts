@@ -11,4 +11,5 @@ export enum GameId {
   VaultExplanation = -8,
   NexusExplanation = -9,
   QuestRoom = -11,
+  CheatersQuarantine = -13
 }
