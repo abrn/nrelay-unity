@@ -1,8 +1,7 @@
-// auto generated with tsai
-// https://github.com/thomas-crane/tsai
 export * from './accinfo';
 export * from './account-in-use-error';
 export * from './api-endpoints';
+export * from './autoloot';
 export * from './classes';
 export * from './condition-effect';
 export * from './enemy';

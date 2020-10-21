@@ -55,6 +55,7 @@ export class Runtime extends EventEmitter {
   buildVersion: string;
   clientToken: string;
   args: Arguments;
+  barebones: boolean;
 
   private logStream: WriteStream;
   private readonly clients: Map<string, Client>;
@@ -66,6 +67,7 @@ export class Runtime extends EventEmitter {
     this.resources = new ResourceManager(this.env);
     this.libraryManager = new LibraryManager(this);
     this.clients = new Map();
+    this.barebones = false;
   }
 
   /**
@@ -81,6 +83,13 @@ export class Runtime extends EventEmitter {
       minLevel = LogLevel.Debug;
     }
     Logger.addLogger(new DefaultLogger(minLevel));
+
+    // check if running in barebones mode
+    if (args.barebones) {
+      this.barebones = true;
+    }
+    Logger.log('Runtime', 'Running in barebones mode', LogLevel.Error);
+
 
     // set up the log file if we have the flag enabled.
     if (args.log) {
@@ -124,6 +133,7 @@ export class Runtime extends EventEmitter {
         Logger.log('Runtime', `Using client token "${this.clientToken}"`, LogLevel.Info);
       } else {
         Logger.log('Runtime', 'Cannot load clientToken - inserting the default value', LogLevel.Warning);
+        // exalt client token
         this.clientToken = '8bV53M5ysJdVjU4M97fh2g7BnPXhefnc';
         this.env.updateJSON<Versions>({ clientToken: this.clientToken }, 'versions.json');
       }
@@ -282,14 +292,6 @@ export class Runtime extends EventEmitter {
    */
   getClients(): Client[] {
     return [...this.clients.values()];
-  }
-
-  /**
-   * Updates the build version stored in the versions.json file.
-   * @param buildVersion The new build version to store.
-   */
-  updateBuildVersion(buildVersion: string): void {
-    this.env.updateJSON<Versions>({ buildVersion }, 'versions.json');
   }
 
   /**

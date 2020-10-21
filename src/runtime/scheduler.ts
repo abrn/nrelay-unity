@@ -14,6 +14,7 @@ export function getWaitTime(host: string): number {
   const now = Date.now();
   let nextTime = schedules.get(host) || 0;
   let timeout = 0;
+
   if (now < nextTime) {
     // if the connection was too soon, return how many ms there is to go.
     timeout = nextTime - now;
@@ -23,6 +24,7 @@ export function getWaitTime(host: string): number {
     // no delay required. Make sure the next connection is at least MIN_TIME ms away.
     nextTime = now + MIN_TIME;
   }
+  
   schedules.set(host, nextTime);
   Logger.log('Scheduler', `Delaying ${host ? host : 'local'} by ${timeout}ms`, LogLevel.Debug);
   return timeout;
