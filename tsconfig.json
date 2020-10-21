@@ -9,7 +9,7 @@
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "incremental": true,
+    "incremental": false,
     "esModuleInterop": true,
     "rootDir": "./src",
     "outDir": "./lib",
