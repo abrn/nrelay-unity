@@ -26,3 +26,4 @@ servers.cache.json
 node_modules/*
 exalt-resources/*
 
+index.js
