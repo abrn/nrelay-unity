@@ -16,7 +16,7 @@ import { createConnection } from '../util/net-util';
 import * as parsers from '../util/parsers';
 import { getHooks, PacketHook } from './../decorators';
 // tslint:disable-next-line: max-line-length
-import { Account, CharacterInfo, Classes, ConditionEffect, Enemy, GameObject, getDefaultPlayerData, hasEffect, MapInfo, MoveRecords, PlayerData, Projectile, Proxy, Server } from './../models';
+import { Account, AutoLootSettings, CharacterInfo, Classes, ConditionEffect, Enemy, GameObject, getDefaultPlayerData, hasEffect, MapInfo, MoveRecords, PlayerData, Projectile, Proxy, Server } from './../models';
 
 const MIN_MOVE_SPEED = 0.004;
 const MAX_MOVE_SPEED = 0.0096;
@@ -30,11 +30,10 @@ export class Client {
 
   /**
    * The player data of the client.
-   * @see `PlayerData` for more info.
    */
   playerData: PlayerData;
   /**
-   * The objectId of the client.
+   * The objectId of the client
    */
   objectId: number;
   /**
@@ -43,49 +42,31 @@ export class Client {
   worldPos: WorldPosData;
   /**
    * The PacketIO instance associated with the client.
-   * @see `PacketIO` for more info.
    */
   io: PacketIO;
   /**
    * The tiles of the current map. These are stored in a
    * 1d array, so to access the tile at x, y the index
    * y * height + x should be used where height is the height
-   * of the map.
-   * @example
-   * ```
-   * getTile(client: Client, x: number, y: number): MapTile {
-   *   const tileX = Math.floor(x);
-   *   const tileY = Math.floor(y);
-   *   return client.mapTiles.mapTiles[tileY * client.mapInfo.height + tileX];
-   * }
-   * ```
+   * of the map
    */
   mapTiles: MapTile[];
   /**
-   * A queue of positions for the client to move towards. If
-   * the queue is not empty, the client will move towards the first
-   * item in it. The first item will be removed when the client has reached it.
-   * @example
-   * ```
-   * const pos: WorldPosData = client.worldPos.clone();
-   * pos.x += 1;
-   * pos.y += 1;
-   * client.nextPos.push(pos);
-   * ```
+   * A queue of positions for the client to move towards 
+   * If the queue is not empty, the client will move incrementally towards
+   * the items until the queue contains nothing
    */
   readonly nextPos: WorldPosData[];
   /**
-   * Info about the current map.
-   * @see `MapInfo` for more information.
+   * Info about the current map
    */
   mapInfo: MapInfo;
   /**
-   * Info about the account's characters.
-   * @see `CharacterInfo` for more information.
+   * Info about the account's characters
    */
   readonly charInfo: CharacterInfo;
   /**
-   * The server the client is connected to.
+   * The server the client is connected to
    */
   get server(): Server {
     return this.internalServer;
@@ -97,11 +78,11 @@ export class Client {
   /**
    * The email address of the client
    */
-  readonly guid: string;
+  guid: string;
   /**
    * The password of the client
    */
-  readonly password: string;
+  password: string;
   /**
    * The runtime in which this client is running
    */
@@ -111,28 +92,17 @@ export class Client {
    */
   autoAim: boolean;
   /**
-   * Whether or not the client should automatically use the ability
+   * Whether or not the client's character should automatically use its ability
    */
   autoAbility: boolean;
   /**
-   * The time in ms between the last ability use
+   * The time in unix milliseconds when the last ability was used
    */
   lastAutoAbility: number;
   /**
-   * Whether or not the reconnect packet should be blocked
-   */
-  blockReconnect: boolean;
-  /**
-   * Whether to block the next UPDATE ACK
-   */
-  blockNextUpdateAck: boolean;
-  /**
-   * A number between 0 and 1 which can be used to modify the speed
-   * of the client. A value of 1 will be 100% move speed for the client,
-   * a value of 0.5 will be 50% of the max speed. etc.
-   *
-   * @example
-   * client.moveMultiplier = 0.8;
+   * A number between 0 and 1 which can be used to modify the movespeed of the Client character 
+   * A value of 1 will be 100% move speed for the character
+   * a value of 0.12 will be 12% of the max speed, etc
    */
   set moveMultiplier(value: number) {
     this.internalMoveMultiplier = Math.max(0, Math.min(value, 1));
@@ -140,11 +110,9 @@ export class Client {
   get moveMultiplier(): number {
     return this.internalMoveMultiplier;
   }
-
   /**
-   * A number between 0 and 1 which represents the percentage of health
-   * at which the client will escape to the Nexus.
-   * A value of 0.5 will be 50% of the max health.
+   * A number between 0 and 1 which represents the autonexus percentage
+   * A value of 0.25 will be nexusing at 25% of the characters max health
    */
   set autoNexusThreshold(value: number) {
     this.internalAutoNexusThreshold = Math.max(0, Math.min(value, 1));
@@ -153,10 +121,62 @@ export class Client {
     return this.internalAutoNexusThreshold;
   }
   /**
-   * Indicates whether or not the client's TCP socket is connected.
+   * Connects or disconnects the client's TCP socket
+   */
+  set connected(value: boolean) {
+    this.socketConnected = value;
+  }
+  /**
+   * Return whether the TCP socket for the client is connected
    */
   get connected(): boolean {
     return this.socketConnected;
+  }
+  /**
+   * Sets or returns the delay in milliseconds before the client will automatically swap another item
+   */
+  set invSwapSpeed(speed: number) {
+    this.swapSpeedMs = speed;
+  }
+  get invSwapSpeed(): number {
+    return this.swapSpeedMs;
+  }
+  /**
+   * Toggle whether the client should ignore delaying reconnects from the schedular class
+   */
+  set ignoreReconDelay(toggle: boolean) {
+    this.ignoreReconCooldown = toggle;
+  }
+  /**
+   * Returns true if the client is ignoring delayed reconnects
+   */
+  get ignoringReconDelay(): boolean {
+    return this.ignoreReconCooldown;
+  }
+  /**
+   * Set the current auto loot settings
+   */
+  set setAutoLootSettings(settings: AutoLootSettings) {
+    this.autoLootSettings = settings;
+  }
+  /**
+   * Toggle auto loot on and off
+   */
+  set toggleAutoLoot(toggle: boolean) {
+    if (toggle) {
+      this.autoLoot = true;
+      if (!this.autoLootSettings) {
+        this.autoLootSettings = new AutoLootSettings();
+      }
+    } else {
+      this.autoLoot = false;
+    }
+  }
+  /**
+   * Return whether auto looting of items is enabled
+   */
+  get autoLootEnabled(): boolean {
+    return this.autoLoot;
   }
 
   /**
@@ -166,10 +186,10 @@ export class Client {
     return this.internalGameId;
   }
 
+  // client connection data
   private socketConnected: boolean;
   private internalMoveMultiplier: number;
   private internalAutoNexusThreshold: number;
-
   private nexusServer: Server;
   private internalServer: Server;
   private lastTickTime: number;
@@ -188,6 +208,9 @@ export class Client {
   private moveRecords: MoveRecords;
   private frameUpdateTimer: NodeJS.Timer;
   private needsNewCharacter: boolean;
+  private swapSpeedMs: number;
+  private autoLoot: boolean;
+  private autoLootSettings: AutoLootSettings;
 
   // reconnect info
   private connectionGuid: string;
@@ -195,6 +218,12 @@ export class Client {
   private keyTime: number;
   private internalGameId: GameId;
   private reconnectCooldown: number;
+  // whether to ignore the reconnect cooldown set by the scheduler
+  private ignoreReconCooldown: boolean;
+  // whether to block all reconnect packets
+  private blockReconnect: boolean;
+  // block the next updateAck the client will send
+  private blockNextUpdateAck: boolean;
 
   // enemies/projeciles
   private projectiles: Projectile[];
@@ -233,17 +262,19 @@ export class Client {
     this.nextPos = [];
 
     this.autoAim = true;
-    this.autoAbility = true;
+    this.autoAbility = false;
+    this.autoLoot = false;
     this.lastAutoAbility = 0;
     this.blockReconnect = false;
     this.blockNextUpdateAck = false;
-    // TODO: add reconnect blocking option
+    this.ignoreReconCooldown = false;
+    this.swapSpeedMs = 760;
   
     this.connectTime = Date.now();
     this.socketConnected = false;
     this.connectionGuid = '';
     this.internalGameId = GameId.Nexus;
-    this.internalMoveMultiplier = 0.9;
+    this.internalMoveMultiplier = 1;
     this.tileMultiplier = 1;
     this.internalAutoNexusThreshold = 0.2;
     this.currentBulletId = 1;
@@ -358,6 +389,7 @@ export class Client {
    * Use the ability on the players class (auto buff or damage nearest enemy)
    */
   useAbility(angle1: number, time: number): void {
+    // TODO: COMPLETE THIS
     if (this.autoAbility) {
       
       let ability = this.runtime.resources.items[this.playerData.inventory[1]];
@@ -377,6 +409,7 @@ export class Client {
    */
   canUseAbility(time: number = -1, ability: GameObject): boolean
   {
+    // TODO: COMPLETE THIS
     if (this.playerData.inventory[1] == -1) return false;
     if (!ability.usable) return false;
 
@@ -402,6 +435,7 @@ export class Client {
     if (ability.activate[0].cooldown) {
       if (((Date.now() / 1000) - (this.lastAutoAbility / 1000)) < ability.activate[0].cooldown) return false;
     }
+    return true;
   }
 
   startAutoAbility(): void {
@@ -412,7 +446,7 @@ export class Client {
    * Removes all event listeners and releases any resources held by the client.
    * This should only be used when the client is no longer needed.
    */
-  destroy(): void {
+  destroy(processTick: boolean = true): void {
     // packet io.
     if (this.io) {
       this.io.detach();
@@ -428,24 +462,34 @@ export class Client {
       this.runtime.emit(Events.ClientDisconnect, this);
     }
 
-    // client socket.
+    // client socket
     if (this.clientSocket) {
       this.clientSocket.removeAllListeners('close');
       this.clientSocket.removeAllListeners('error');
       this.clientSocket.destroy();
     }
 
-    // resources.
+    // resources
     // if we're unlucky, a packet hook, or onFrame was called and preempted this method.
     // to avoid a nasty race condition, release these resources on the next tick after
     // the io has been detached and the frame timers have been stopped.
-    process.nextTick(() => {
-      this.mapTiles = undefined;
-      this.projectiles = undefined;
-      this.enemies = undefined;
-      this.io = undefined;
-      this.clientSocket = undefined;
-    });
+    if (processTick) {
+      process.nextTick(() => {
+        this.mapTiles = undefined;
+        this.projectiles = undefined;
+        this.enemies = undefined;
+        this.io = undefined;
+        this.clientSocket = undefined;
+      });
+    }
+  }
+
+  /**
+   * Blocks the client from receiving or sending any packets but keeps the internal connection alive
+   * This can be used for things like noclip or making the server think you disconnected
+   */
+  blockConnections() {
+
   }
 
   /**
@@ -848,7 +892,7 @@ export class Client {
     }
     
     const pathfinderUpdates: NodeUpdate[] = [];
-    // playerdata
+    
     for (const obj of updatePacket.newObjects) {
       if (obj.status.objectId === this.objectId) {
         for (const stat of obj.status.stats) {
@@ -959,7 +1003,10 @@ export class Client {
   @PacketHook()
   private onReconnectPacket(reconnectPacket: ReconnectPacket): void {
     // check for reconnect blocking
-    if (this.blockReconnect) return;
+    if (this.blockReconnect) {
+      Logger.log('Reconnect', `Blocked reconnect packet for ${reconnectPacket.name}`, LogLevel.Debug)
+      return;
+    }
     
     // if there is a new host, then switch to it
     if (reconnectPacket.host !== '') {
@@ -996,8 +1043,7 @@ export class Client {
     switch (failurePacket.errorId) {
       case FailureCode.IncorrectVersion:
         Logger.log(this.alias, 'Your Exalt build version is out of date - change the buildVersion in versions.json', LogLevel.Error);
-        this.buildVersion = failurePacket.errorDescription;
-        this.runtime.updateBuildVersion(failurePacket.errorDescription);
+        this.destroy();
         break;
       case FailureCode.InvalidTeleportTarget:
         Logger.log(this.alias, 'Invalid teleport target', LogLevel.Warning);
@@ -1242,6 +1288,7 @@ export class Client {
     this.players.clear();
     this.projectiles = [];
     this.moveRecords = new MoveRecords();
+    this.worldPos = new WorldPosData(135,140);
     this.sendHello();
   }
 
@@ -1285,7 +1332,10 @@ export class Client {
     if (this.reconnectCooldown <= 0) {
       this.reconnectCooldown = getWaitTime(this.proxy ? this.proxy.host : '');
     }
-    this.connect();
+    // reconnect back if we're not blocking reconnecting
+    if (!this.blockReconnect) {
+      this.connect();
+    }
   }
 
   private onError(error: Error): void {
@@ -1318,10 +1368,9 @@ export class Client {
       this.frameUpdateTimer = undefined;
     }
 
-    if (this.reconnectCooldown > 0) {
-      Logger.log(this.alias, `Connecting in ${(this.reconnectCooldown / 1000).toFixed(1)} seconds.`, LogLevel.Info);
+    if (!this.ignoreReconCooldown && this.reconnectCooldown > 0) {
+      Logger.log(this.alias, `Connecting in ${this.reconnectCooldown / 1000} milliseconds`, LogLevel.Info);
       await delay(this.reconnectCooldown);
-      this.reconnectCooldown = 0;
     }
     try {
       if (this.proxy) {
@@ -1369,7 +1418,7 @@ export class Client {
     }
   }
 
-  private walkTo(x: number, y: number): void {
+  walkTo(x: number, y: number): void {
     // tslint:disable-next-line: no-bitwise
     if (hasEffect(this.playerData.condition, ConditionEffect.PARALYZED || ConditionEffect.PAUSED)) {
       if (!hasEffect(this.playerData.condition, ConditionEffect.PARALYZED_IMMUNE)) {
