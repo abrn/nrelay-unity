@@ -1,5 +1,5 @@
 import { Environment } from '../runtime/environment';
-import { GameObject, ProjectileInfo, Tile } from './../models';
+import { ActivateInfo, GameObject, ProjectileInfo, Tile } from './../models';
 import { Logger, LogLevel } from './../services';
 
 /**
@@ -97,7 +97,55 @@ export class ResourceManager {
           fullOccupy: current.FullOccupy === '',
           occupySquare: current.OccupySquare === '',
           protectFromGroundDamage: current.ProtectFromGroundDamage === '',
+          mpCost: isNaN(current.MpCost) ? null : +current.MpCost,
+          mpEndCost: isNaN(current.MpEndCost) ? null : +current.MpEndCost,
+          soulbound: (current.Soulbound) ? true : false,
+          usable: (current.Usable) ? true : false,
+          activate: []
         };
+        /* if (Array.isArray(current.Activate)) {
+          this.objects[+current.type].activate = new Array<ActivateInfo>(current.Activate.length);
+          for (let j = 0; j < current.Activate.length; j++) {
+            this.objects[+current.type].activate[j] = {
+              id: +current.Activate[j].id,
+              type: (+current.Activate[j]._ as unknown as string),
+              duration: current.Activate[j].duration ? current.Activate[j].duration : null,
+              stat: current.Activate[j].stat ? current.Activate[j].stat : null,
+              effect: current.Activate[j].effect ? current.Activate[j].effect : null,
+              cooldown: current.Activate[j].cooldown ? current.Activate[j].cooldown : null,
+              target: current.Activate[j].target ? current.Activate[j].target : null,
+              center: current.Activate[j].center ? current.Activate[j].center : null,
+              numShots: current.Activate[j].numShots ? current.Activate[j].numShots : null,
+              speed: current.Activate[j].speed ? current.Activate[j].speed : null,
+              range: current.Activate[j].range ? current.Activate[j].range : null,
+              radius: current.Activate[j].radius ? current.Activate[j].radius : null,
+              totalDamage: current.Activate[j].totalDamage ? current.Activate[j].totalDamage : null,
+              impactDamage: current.Activate[j].impactDamage ? current.Activate[j].impactDamage : null,
+              throwTime: current.Activate[j].throwTime ? current.Activate[j].throwTime : null,
+              heal: current.Activate[j].heal ? current.Activate[j].heal : null,
+              healRange: current.Activate[j].healRange ? current.Activate[j].healRange : null,
+              ignoreDef: current.Activate[j].ignoreDef ? current.Activate[j].ignoreDef : null,
+              wisMin: current.Activate[j].wisMin ? current.Activate[j].wisMin : null,
+              useWisMod: current.Activate[j].useWisMod ? true : false,
+              wisDamageBase: current.Activate[j].wisDamageBase ? current.Activate[j].wisDamageBase : null,
+              condEffect: current.Activate[j].condEffect ? current.Activate[j].condEffect : null,
+              condDuration: current.Activate[j].condDuration ? current.Activate[j].condDuration : null,
+              noStack: current.Activate[j].noStack ? true : false,
+              slot: current.Activate[j].slot ? current.Activate[j].slot : null,
+              skin: current.Activate[j].skin ? current.Activate[j].skin : null,
+              skinType: current.Activate[j].skinType ? current.Activate[j].skinType : null,
+              isUnlock: current.Activate[j].isUnlock ? true : false,
+              newId: current.Activate[j].newId ? current.Activate[j].newId : null,
+              onlyIn: current.Activate[j].onlyIn ? current.Activate[j].onlyIn : null,
+              onlyInArea: current.Activate[j].onlyInArea ? current.Activate[j].onlyInArea : null,
+            }
+          }
+        } else {
+          this.objects[+current.type].activate.push({
+            id: this.objects[+current.type].activate.length + 1,
+            type: (+current.Activate as unknown as string)
+          })
+        } */
         if (Array.isArray(current.Projectile)) {
           this.objects[+current.type].projectiles = new Array<ProjectileInfo>(current.Projectile.length);
           for (let j = 0; j < current.Projectile.length; j++) {
