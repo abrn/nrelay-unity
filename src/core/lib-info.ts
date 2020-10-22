@@ -1,5 +1,4 @@
 import { LibraryInfo } from './../models/plugin-info';
-
 /**
  * A type which can be created using `new` syntax.
  * @example
@@ -8,7 +7,6 @@ import { LibraryInfo } from './../models/plugin-info';
  * }
  */
 export type Type<T> = new(...args: any[]) => T;
-
 /**
  * A library which has been loaded using the `@Library` decorator.
  */
@@ -17,7 +15,6 @@ export interface LoadedLib<T> {
   target: Type<T>;
   dependencies: string[];
 }
-
 /**
  * A loaded library with an associated instance of it.
  */
@@ -35,7 +32,6 @@ export interface HookInfo<T> {
   packet: string;
   signature: HookParamType[];
 }
-
 /**
  * The types which can be used as hook method parameters.
  */
