@@ -11,9 +11,7 @@ import { Client, Library, PacketHook } from './../core';
 export type PetEventListener = (pet: PetData, client: Client) => void;
 
 @Library({
-  name: 'Pet Tracker',
-  author: 'tcrane',
-  description: 'A utility library for keeping track of pets.',
+  name: 'pet tracker library'
 })
 export class PetTracker {
 

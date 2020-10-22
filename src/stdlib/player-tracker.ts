@@ -12,9 +12,7 @@ import { Classes, PlayerData } from './../models';
 export type PlayerEventListener = (player: PlayerData, client: Client) => void;
 
 @Library({
-  name: 'Player Tracker',
-  author: 'tcrane',
-  description: 'A utility library for keeping track of other players visible to connected clients.',
+  name: 'player tracker library'
 })
 export class PlayerTracker {
 

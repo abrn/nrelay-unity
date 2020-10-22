@@ -8,9 +8,7 @@ import { Client, Library, PacketHook } from '../core';
 export type ObjectEventListener = (obj: ObjectData, client: Client) => void;
 
 @Library({
-  name: 'Object Tracker',
-  author: 'tcrane',
-  description: 'A utility library for keeping track of objects.',
+  name: 'object tracker library'
 })
 export class ObjectTracker {
   private emitter: EventEmitter;
