@@ -1,11 +1,13 @@
 import { Proxy } from './proxy';
+import { ProxyPool } from './proxy-pool'
 /**
  * A list of `Account`s and configuration settings used by nrelay at startup time.
  */
 export interface AccountInfo {
   buildVersion: string;
   localServer?: LocalServerSettings;
-  accounts: Account[];
+  accounts: Account[],
+  proxyPool: ProxyPool;
 }
 /**
  * An account which can be used to connect to the game with.
@@ -18,6 +20,7 @@ export interface Account {
   charInfo?: CharacterInfo;
   proxy?: Proxy;
   pathfinder?: boolean;
+  plugin?: string
 }
 
 /**
