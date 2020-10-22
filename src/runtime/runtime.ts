@@ -17,27 +17,15 @@ interface Arguments {
   [argName: string]: unknown;
 }
 
-/**
- * An account which was initially added, but failed for some reason.
- */
 interface FailedAccount {
-  /**
-   * The account which failed to load.
-   */
   account: Account;
-  /**
-   * The number of times this account has tried to be loaded.
-   */
   retryCount: number;
-  /**
-   * The number of seconds to wait before trying to load this account again.
-   */
   timeout: number;
 }
 
 /**
  * The runtime manages clients, resources, plugins and any other services
- * which are used by an nrelay project.
+ * which are used by an nrelay project
  */
 export class Runtime extends EventEmitter {
 
@@ -46,12 +34,8 @@ export class Runtime extends EventEmitter {
   readonly resources: ResourceManager;
   readonly libraryManager: LibraryManager;
   
-  /**
-   * A bidirectional map of packet ids.
-   */
   packetMap: PacketMap;
 
-  
   buildVersion: string;
   clientToken: string;
   args: Arguments;
@@ -161,6 +145,7 @@ export class Runtime extends EventEmitter {
 
     // finally, load any accounts.
     const accounts = this.env.readJSON<Account[]>('accounts.json');
+
     if (accounts) {
       const failures: FailedAccount[] = [];
       for (const account of accounts) {
@@ -181,7 +166,7 @@ export class Runtime extends EventEmitter {
       }
       // try to load the failed accounts.
       for (const failure of failures) {
-        // perform the work in a promise so it doesn't block.
+        // perform the work in a promise so it doesn't block
         new Promise(async (resolve, reject) => {
           while (failure.retryCount <= 10) {
             Logger.log(
@@ -221,7 +206,7 @@ export class Runtime extends EventEmitter {
    * Creates a new client which uses the provided account.
    * @param account The account to login to.
    */
-  addClient(account: Account): Promise<Client> {
+   async addClient(account: Account): Promise<Client> {
     // make sure the client has an alias.
     if (!account.alias) {
       account.alias = censorGuid(account.guid);
