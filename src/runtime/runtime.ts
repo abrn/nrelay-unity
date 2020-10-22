@@ -126,6 +126,7 @@ export class Runtime extends EventEmitter {
         this.buildVersion = versions.buildVersion;
         Logger.log('Runtime', `Using build version "${this.buildVersion}"`, LogLevel.Info);
       } else {
+        this.buildVersion = '1.2.0.1.0'
         Logger.log('Runtime', 'Cannot load buildVersion. Clients may not be able to connect.', LogLevel.Warning);
       }
       if (versions.clientToken) {
