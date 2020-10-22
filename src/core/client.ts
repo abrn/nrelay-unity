@@ -26,6 +26,7 @@ const MAX_ATTACK_FREQ = 0.008;
 const MIN_ATTACK_MULT = 0.5;
 const MAX_ATTACK_MULT = 2;
 const ACC_IN_USE = /Account in use \((\d+) seconds? until timeout\)/;
+// TODO: REMOVE THIS UGLINESS
 
 export class Client {
   /**
@@ -268,7 +269,7 @@ export class Client {
     this.blockReconnect = false;
     this.blockNextUpdateAck = false;
     this.ignoreReconCooldown = false;
-    this.swapSpeedMs = 760;
+    this.swapSpeedMs = 500;
   
     this.connectTime = Date.now();
     this.socketConnected = false;
@@ -559,7 +560,10 @@ export class Client {
     }
     to.x = Math.floor(to.x);
     to.y = Math.floor(to.y);
-    const clientPos = new WorldPosData(Math.floor(this.worldPos.x), Math.floor(this.worldPos.y));
+    const clientPos = new WorldPosData(
+      Math.round(this.worldPos.x * 10) / 10, 
+      Math.round(this.worldPos.y * 10) / 10
+    );
     this.pathfinder.findPath(clientPos, to).then((path) => {
       if (path.length === 0) {
         this.pathfinderTarget = undefined;
@@ -773,20 +777,14 @@ export class Client {
     const tile = this.mapTiles[y * this.mapInfo.width + x];
 
     // if there is no tile, return.
-    if (!tile) {
-      return;
-    }
+    if (!tile) return
 
     // don't damage if the last damage was less than 500 ms ago.
     const now = this.getTime();
-    if (tile.lastDamage + 500 > now) {
-      return;
-    }
+    if (tile.lastDamage + 500 > now) return;
 
     // don't damage if the tile is protected from ground damage.
-    if (tile.protectFromGroundDamage) {
-      return;
-    }
+    if (tile.protectFromGroundDamage) return;
 
     // if the tile actually does damage.
     const props = this.runtime.resources.tiles[tile.type];
