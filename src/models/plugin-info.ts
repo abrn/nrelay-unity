@@ -9,7 +9,7 @@ export interface LibraryInfo {
   /**
    * The author of the library.
    */
-  author: string;
+  author?: string;
   /**
    * A description of the library.
    */
