@@ -1043,7 +1043,7 @@ export class Client {
     switch (failurePacket.errorId) {
       case FailureCode.IncorrectVersion:
         Logger.log(this.alias, 'Your Exalt build version is out of date - change the buildVersion in versions.json', LogLevel.Error);
-        this.destroy();
+        process.exit(0);
         break;
       case FailureCode.InvalidTeleportTarget:
         Logger.log(this.alias, 'Invalid teleport target', LogLevel.Warning);
