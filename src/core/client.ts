@@ -1,5 +1,6 @@
 // tslint:disable-next-line: max-line-length
 import { AoeAckPacket, AoePacket, CreatePacket, CreateSuccessPacket, DamagePacket, DeathPacket, EnemyHitPacket, EnemyShootPacket, FailureCode, FailurePacket, GotoAckPacket, GotoPacket, GroundDamagePacket, GroundTileData, HelloPacket, LoadPacket, MapInfoPacket, MovePacket, NewTickPacket, NotificationPacket, OtherHitPacket, Packet, PacketIO, PacketMap, PingPacket, PlayerHitPacket, PlayerShootPacket, Point, PongPacket, ReconnectPacket, ServerPlayerShootPacket, ShootAckPacket, StatType, UpdateAckPacket, UpdatePacket, WorldPosData } from '@realmlib/net';
+
 import { Socket } from 'net';
 import * as rsa from '../crypto/rsa';
 import { Entity } from '../models/entity';
@@ -27,7 +28,6 @@ const MAX_ATTACK_MULT = 2;
 const ACC_IN_USE = /Account in use \((\d+) seconds? until timeout\)/;
 
 export class Client {
-
   /**
    * The player data of the client.
    */
@@ -576,6 +576,15 @@ export class Client {
   }
 
   /**
+   * Returns the index of a map tile given a position and current map height
+   * @param tile The current tile
+   */
+  getMapTileIndex(tile: WorldPosData): number {
+    const mapheight = this.mapInfo.height;
+    return (tile.y * mapheight + tile.x)
+  }
+
+  /**
    * Applies some damage and returns whether or not the client should
    * return to the nexus.
    * @param amount The amount of damage to apply.
@@ -1044,15 +1053,14 @@ export class Client {
       case FailureCode.IncorrectVersion:
         Logger.log(this.alias, 'Your Exalt build version is out of date - change the buildVersion in versions.json', LogLevel.Error);
         process.exit(0);
-        break;
       case FailureCode.InvalidTeleportTarget:
         Logger.log(this.alias, 'Invalid teleport target', LogLevel.Warning);
         break;
       case FailureCode.EmailVerificationNeeded:
-        Logger.log(this.alias, 'Email verification is required for this account', LogLevel.Error);
+        Logger.log(this.alias, 'Failed to connect: account requires email verification', LogLevel.Error);
         break;
       case FailureCode.BadKey:
-        Logger.log(this.alias, 'Invalid key used', LogLevel.Error);
+        Logger.log(this.alias, 'Failed to connect: invalid reconnect key used', LogLevel.Error);
         this.key = [];
         this.internalGameId = GameId.Nexus;
         this.keyTime = -1;
@@ -1397,27 +1405,6 @@ export class Client {
     }
   }
 
-  private moveTo(target: WorldPosData, timeElapsed: number): void {
-    if (!target) {
-      return;
-    }
-    const step = this.getSpeed(timeElapsed);
-    if (this.worldPos.squareDistanceTo(target) > step ** 2) {
-      const angle: number = Math.atan2(target.y - this.worldPos.y, target.x - this.worldPos.x);
-      this.walkTo(this.worldPos.x + Math.cos(angle) * step, this.worldPos.y + Math.sin(angle) * step);
-    } else {
-      this.walkTo(target.x, target.y);
-      const lastPos = this.nextPos.shift();
-      if (this.nextPos.length === 0) {
-        this.runtime.emit(Events.ClientArrived, this, lastPos);
-
-        if (this.pathfinderTarget) {
-          this.pathfinderTarget = undefined;
-        }
-      }
-    }
-  }
-
   walkTo(x: number, y: number): void {
     // tslint:disable-next-line: no-bitwise
     if (hasEffect(this.playerData.condition, ConditionEffect.PARALYZED || ConditionEffect.PAUSED)) {
@@ -1439,6 +1426,28 @@ export class Client {
       this.worldPos.y = y;
     }
   }
+
+  private moveTo(target: WorldPosData, timeElapsed: number): void {
+    if (!target) {
+      return;
+    }
+    const step = this.getSpeed(timeElapsed);
+    if (this.worldPos.squareDistanceTo(target) > step ** 2) {
+      const angle: number = Math.atan2(target.y - this.worldPos.y, target.x - this.worldPos.x);
+      this.walkTo(this.worldPos.x + Math.cos(angle) * step, this.worldPos.y + Math.sin(angle) * step);
+    } else {
+      this.walkTo(target.x, target.y);
+      const lastPos = this.nextPos.shift();
+      if (this.nextPos.length === 0) {
+        this.runtime.emit(Events.ClientArrived, this, lastPos);
+
+        if (this.pathfinderTarget) {
+          this.pathfinderTarget = undefined;
+        }
+      }
+    }
+  }
+
 
   private getAttackMultiplier(): number {
     if (hasEffect(this.playerData.condition, ConditionEffect.WEAK)) {
