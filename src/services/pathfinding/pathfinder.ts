@@ -1,4 +1,4 @@
-import { Point } from '@realmlib/net';
+import { Point } from '@realmlib-unity';
 import { HashSet } from './hash-set';
 import { Heap } from './heap';
 import { Node } from './node';

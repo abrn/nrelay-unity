@@ -1,4 +1,4 @@
-import { WorldPosData } from '@realmlib/net';
+import { WorldPosData } from '@realmlib-unity';
 
 /**
  * Properties of a pet.

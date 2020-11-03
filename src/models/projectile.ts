@@ -1,4 +1,4 @@
-import { Point } from '@realmlib/net';
+import { Point } from '@realmlib-unity';
 import { GameObject, ProjectileInfo } from './object';
 
 /**
