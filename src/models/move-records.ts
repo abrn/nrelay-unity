@@ -1,4 +1,4 @@
-import { MoveRecord } from '@realmlib/net';
+import { MoveRecord } from '@realmlib-unity';
 
 /**
  * This code is mostly ported from the RotMG game client. It's

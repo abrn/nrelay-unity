@@ -1,4 +1,4 @@
-import { NewTickPacket, ObjectStatusData, StatType, UpdatePacket } from '@realmlib/net';
+import { NewTickPacket, ObjectStatusData, StatType, UpdatePacket } from '@realmlib-unity';
 import { EventEmitter } from 'events';
 import { Events } from '../models/events';
 import { PetData } from '../models/pet-data';

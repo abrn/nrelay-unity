@@ -1,4 +1,4 @@
-import { ObjectStatusData, Point, StatType } from '@realmlib/net';
+import { ObjectStatusData, Point, StatType } from '@realmlib-unity';
 import * as parsers from '../util/parsers';
 import { PlayerData } from './playerdata';
 
