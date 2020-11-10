@@ -57,7 +57,7 @@ export class Client {
    * If the queue is not empty, the client will move incrementally towards
    * the items until the queue contains nothing
    */
-  readonly nextPos: WorldPosData[];
+  nextPos: WorldPosData[];
   /**
    * Info about the current map
    */
@@ -88,6 +88,10 @@ export class Client {
    * The runtime in which this client is running
    */
   readonly runtime: Runtime;
+  /**
+   * If set, a string can be entered in the accounts.json to set a sub-plugin
+   */
+  plugin: string;
   /**
    * Whether or not the client should automatically shoot at enemies
    */
@@ -256,6 +260,7 @@ export class Client {
     this.playerData.server = server.name;
     this.proxy = accInfo.proxy;
     this.pathfinderEnabled = accInfo.pathfinder || false;
+    this.plugin = accInfo.plugin || null
     
     this.projectiles = [];
     this.enemies = new Map();
@@ -490,7 +495,20 @@ export class Client {
    * This can be used for things like noclip or making the server think you disconnected
    */
   blockConnections() {
-
+    Logger.log(this.alias, `Client connection blocked`, LogLevel.Error);
+    this.socketConnected = false;
+    this.runtime.emit(Events.ClientBlocked, this);
+    this.nextPos.length = 0;
+    this.pathfinderTarget = undefined;
+    this.io.detach();
+    this.clientSocket = undefined;
+    if (this.pathfinder) {
+      this.pathfinder.destroy();
+    }
+    if (this.frameUpdateTimer) {
+      clearInterval(this.frameUpdateTimer);
+      this.frameUpdateTimer = undefined;
+    }
   }
 
   /**
@@ -560,14 +578,12 @@ export class Client {
     }
     to.x = Math.floor(to.x);
     to.y = Math.floor(to.y);
-    const clientPos = new WorldPosData(
-      Math.round(this.worldPos.x * 10) / 10, 
-      Math.round(this.worldPos.y * 10) / 10
-    );
+    const clientPos = new WorldPosData(Math.floor(this.worldPos.x), Math.floor(this.worldPos.y));
     this.pathfinder.findPath(clientPos, to).then((path) => {
       if (path.length === 0) {
         this.pathfinderTarget = undefined;
         this.nextPos.length = 0;
+        this.runtime.emit(Events.ClientArrived, this, to);
         return;
       }
       this.pathfinderTarget = to;
@@ -1076,6 +1092,13 @@ export class Client {
             Logger.log(this.alias, 'No active characters. Creating new character.', LogLevel.Info);
             this.needsNewCharacter = true;
             break;
+          case 'Your IP has been temporarily banned for abuse/hacking on this server [6] [FUB]':
+            Logger.log(this.alias, `Client ${this.alias} is IP banned from this server - reconnecting in 5 minutes`, LogLevel.Warning);
+            this.reconnectCooldown = 1000*60*5;
+            break;
+          case '{"key":"server.realm_full"}':
+            // ignore these messages for now
+            break;
           default:
             Logger.log(
               this.alias,
@@ -1294,7 +1317,7 @@ export class Client {
     this.players.clear();
     this.projectiles = [];
     this.moveRecords = new MoveRecords();
-    this.worldPos = new WorldPosData(135,140);
+    //this.worldPos = new WorldPosData(135,140);
     this.sendHello();
   }
 
@@ -1303,7 +1326,9 @@ export class Client {
     hp.buildVersion = this.buildVersion;
     hp.gameId = this.internalGameId;
     hp.guid = rsa.encrypt(this.guid);
+    hp.random1 = Math.floor(Math.random() * 1000000000);
     hp.password = rsa.encrypt(this.password);
+    hp.random2 = Math.floor(Math.random() * 1000000000);
     hp.keyTime = this.keyTime;
     hp.key = this.key;
     hp.gameNet = 'rotmg';
@@ -1343,6 +1368,7 @@ export class Client {
       this.connect();
     }
   }
+
 
   private onError(error: Error): void {
     Logger.log(this.alias, `Received socket error: ${error.message}`, LogLevel.Error);
