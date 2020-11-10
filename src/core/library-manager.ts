@@ -1,4 +1,4 @@
-import { Packet } from '@realmlib/net';
+import { Packet } from '@realmlib-unity';
 import * as fs from 'fs';
 import * as path from 'path';
 import { getHooks, getLibs } from '../decorators';

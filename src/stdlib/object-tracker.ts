@@ -1,4 +1,4 @@
-import { NewTickPacket, ObjectData, UpdatePacket } from '@realmlib/net';
+import { NewTickPacket, ObjectData, UpdatePacket } from '@realmlib-unity';
 import { EventEmitter } from 'events';
 import { Client, Library, PacketHook } from '../core';
 

@@ -1,4 +1,4 @@
-import { NewTickPacket, UpdatePacket } from '@realmlib/net';
+import { NewTickPacket, UpdatePacket } from '@realmlib-unity';
 import { EventEmitter } from 'events';
 import { Events } from '../models/events';
 import { Runtime } from '../runtime';
