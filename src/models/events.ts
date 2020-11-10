@@ -22,4 +22,8 @@ export enum Events {
    * The event raised when the client could not connect to the game server.
    */
   ClientConnectError = 'client_connect_error',
+  /**
+   * The event raised when the client connection is forcibly blocked.
+   */
+  ClientBlocked = 'client_connect_blocked',
 }
