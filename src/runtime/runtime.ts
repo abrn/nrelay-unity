@@ -1,4 +1,4 @@
-import { PacketMap } from '@realmlib-unity';
+import { PacketMap } from '@realmlib/net';
 import { EventEmitter } from 'events';
 import { createWriteStream, WriteStream } from 'fs';
 import { isIP } from 'net';

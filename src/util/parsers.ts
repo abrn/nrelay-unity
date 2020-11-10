@@ -1,4 +1,4 @@
-import { ObjectData, ObjectStatusData, StatData, StatType } from '@realmlib-unity';
+import { ObjectData, ObjectStatusData, StatData, StatType } from '@realmlib/net';
 import { PlayerData } from '../models';
 
 /**

@@ -1,4 +1,4 @@
-import { WorldPosData } from '@realmlib-unity';
+import { WorldPosData } from '@realmlib/net';
 import { Classes } from './classes';
 import { GuildRank } from './guildrank';
 
