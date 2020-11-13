@@ -241,5 +241,5 @@ tsc
 
 This project uses the following open source software:
 
-+ [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - to decompile the Unity client and parse the assets
-+ [ghidra](https://github.com/NationalSecurityAgency/ghidra) - to reverse engineer edits to the network structure of the game
++ [Il2CppInspector](https://github.com/djkaty/Il2CppInspector) - to decompile the Unity client and parse the assets/code
++ [ghidra](https://github.com/NationalSecurityAgency/ghidra) - to reverse engineer the unity client
