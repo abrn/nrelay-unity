@@ -52,6 +52,7 @@ export class LibraryManager {
       } else {
         Logger.log('Plugin Manager', `Error while reading plugin directory.`, LogLevel.Error);
         Logger.log('Plugin Manager', err.message, LogLevel.Error);
+        Logger.log('Plugin Manager', err.stack, LogLevel.Error);
       }
       return;
     }
@@ -66,6 +67,7 @@ export class LibraryManager {
       } catch (err) {
         Logger.log('Plugin Manager', `Error while loading ${file}`, LogLevel.Error);
         Logger.log('Plugin Manager', err.message, LogLevel.Error);
+        Logger.log('Plugin Manager', err.stack, LogLevel.Error);
       }
     }
     // load the libraries and hooks.
